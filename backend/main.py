@@ -7,15 +7,9 @@ from app.core.database import engine, Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup - create tables only if they don't exist
-    from sqlalchemy import inspect
+    # Startup - create tables only if they don't exist (checkfirst=True)
     async with engine.begin() as conn:
-        def create_tables_if_not_exist(sync_conn):
-            inspector = inspect(sync_conn)
-            existing_tables = inspector.get_table_names()
-            if not existing_tables:
-                Base.metadata.create_all(sync_conn)
-        await conn.run_sync(create_tables_if_not_exist)
+        await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, checkfirst=True))
     yield
     # Shutdown (if needed)
 
